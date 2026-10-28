@@ -15,34 +15,72 @@ function validateProduct(data) {
 
     const { name, description, category, price, image_url } = data;
 
-    if (typeof name !== 'string' || !name.trim() || name.trim().length > 150) {
-        const error = new Error('Product name is required (maximum 150 characters)');
+    const stock = data.stock === undefined ? 0 : data.stock;
+
+    if (
+        typeof name !== 'string' ||
+        !name.trim() ||
+        name.trim().length > 150
+    ) {
+        const error = new Error(
+            'Product name is required (maximum 150 characters)'
+        );
         error.status = 400;
         throw error;
     }
 
-    if (typeof category !== 'string' || !category.trim() || category.trim().length > 50) {
-        const error = new Error('Category is required (maximum 50 characters)');
+    if (
+        typeof category !== 'string' ||
+        !category.trim() ||
+        category.trim().length > 50
+    ) {
+        const error = new Error(
+            'Category is required (maximum 50 characters)'
+        );
         error.status = 400;
         throw error;
     }
 
-    if (price === undefined || price === null || price === '' ||
-        !Number.isFinite(Number(price)) || Number(price) < 0) {
-        const error = new Error('Price must be a valid non-negative number');
+    if (
+        price === undefined ||
+        price === null ||
+        price === '' ||
+        !Number.isFinite(Number(price)) ||
+        Number(price) < 0
+    ) {
+        const error = new Error(
+            'Price must be a valid non-negative number'
+        );
         error.status = 400;
         throw error;
     }
 
-    if (description !== undefined && description !== null &&
-        typeof description !== 'string') {
+    if (
+        !Number.isSafeInteger(stock) ||
+        stock < 0
+    ) {
+        const error = new Error(
+            'Stock must be a non-negative whole number'
+        );
+        error.status = 400;
+        throw error;
+    }
+
+    if (
+        description !== undefined &&
+        description !== null &&
+        typeof description !== 'string'
+    ) {
         const error = new Error('Description must be text');
         error.status = 400;
         throw error;
     }
 
-    if (image_url !== undefined && image_url !== null &&
-        typeof image_url !== 'string') {
+    if (
+        image_url !== undefined &&
+        image_url !== null &&
+        typeof image_url !== 'string'
+    ) {
         const error = new Error('Image URL must be text');
         error.status = 400;
         throw error;
@@ -53,11 +91,16 @@ function validateProduct(data) {
         description: description?.trim() || null,
         category: category.trim(),
         price: Number(price),
-        image_url: image_url?.trim() || null
+        image_url: image_url?.trim() || null,
+        stock
     };
 }
 
-export { listActiveProducts, findProductById, deactivateProduct };
+export {
+    listActiveProducts,
+    findProductById,
+    deactivateProduct
+};
 
 export async function addProduct(data, userId) {
     const product = validateProduct(data);
