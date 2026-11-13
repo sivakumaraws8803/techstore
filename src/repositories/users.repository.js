@@ -18,6 +18,24 @@ export async function createUser({ username, passwordHash, role }) {
     return result.rows[0];
 }
 
+export async function createCustomer({ username, fullName, email, passwordHash }) {
+    const result = await pool.query(
+        `INSERT INTO users (username, full_name, email, password_hash, role, is_active)
+         VALUES ($1, $2, $3, $4, 'customer', TRUE)
+         RETURNING id, username, full_name, email, role, is_active, created_at`,
+        [username, fullName, email, passwordHash]
+    );
+    return result.rows[0];
+}
+
+export async function findUserByEmail(email) {
+    const result = await pool.query(
+        'SELECT id FROM users WHERE LOWER(email) = LOWER($1)',
+        [email]
+    );
+    return result.rows[0] || null;
+}
+
 export async function listUsers() {
     const result = await pool.query(
         `SELECT id, username, role, is_active, created_at
