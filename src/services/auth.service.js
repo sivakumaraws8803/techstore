@@ -5,11 +5,11 @@ import { createCustomer, findUserByEmail } from '../repositories/users.repositor
 
 export async function authenticateUser(identifier, password) {
     const result = await pool.query(
-        \`SELECT id, username, full_name, email, password_hash, role, is_active
+        `SELECT id, username, full_name, email, password_hash, role, is_active
          FROM users
          WHERE LOWER(username) = LOWER($1)
             OR LOWER(email) = LOWER($1)
-         LIMIT 1\`,
+         LIMIT 1`,
         [identifier]
     );
 
@@ -67,7 +67,7 @@ export async function registerCustomer({ fullName, email, password }) {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const username = \`customer_\${randomBytes(8).toString('hex')}\`;
+    const username = `customer_${randomBytes(8).toString('hex')}`;
 
     try {
         return await createCustomer({
