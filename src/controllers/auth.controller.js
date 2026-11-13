@@ -1,28 +1,68 @@
-import { authenticateUser } from '../services/auth.service.js';
+import {
+    authenticateUser,
+    registerCustomer
+} from '../services/auth.service.js';
 
-export async function login(req, res, next) {
+export async function register(req, res, next) {
     try {
-        const { username, password } = req.body;
+        const { fullName, email, password } = req.body;
 
         if (
-            typeof username !== 'string' ||
+            typeof fullName !== 'string' ||
+            typeof email !== 'string' ||
             typeof password !== 'string' ||
-            !username.trim() ||
+            !fullName.trim() ||
+            !email.trim() ||
             !password
         ) {
             return res.status(400).json({
-                error: 'Username and password are required'
+                error: 'Full name, email and password are required.'
+            });
+        }
+
+        const user = await registerCustomer({ fullName, email, password });
+
+        return res.status(201).json({
+            message: 'Account created successfully. Please log in.',
+            user: {
+                id: user.id,
+                full_name: user.full_name,
+                email: user.email,
+                role: user.role
+            }
+        });
+    } catch (error) {
+        if (error.status) {
+            return res.status(error.status).json({ error: error.message });
+        }
+        next(error);
+    }
+}
+
+export async function login(req, res, next) {
+    try {
+        const identifier = req.body.email ?? req.body.username;
+        const { password } = req.body;
+
+        if (
+            typeof identifier !== 'string' ||
+            typeof password !== 'string' ||
+            !identifier.trim() ||
+            !password
+        ) {
+            return res.status(400).json({
+                error: 'Email or username and password are required.'
             });
         }
 
         const user = await authenticateUser(
-            username.trim(),
+            identifier.trim(),
             password
         );
 
         if (!user) {
             return res.status(401).json({
-                error: 'Invalid username or password'
+                error: 'Invalid email/username or password.'
             });
         }
 
