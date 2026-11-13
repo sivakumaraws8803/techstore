@@ -7,6 +7,7 @@ import { pool } from './config/database.js';
 import authRoutes from './routes/auth.routes.js';
 import usersRoutes from './routes/users.routes.js';
 import productsRoutes from './routes/products.routes.js';
+import ordersRoutes from './routes/orders.routes.js';
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/products', productsRoutes);
+app.use('/api/orders', ordersRoutes);
 
 app.use((req, res) => {
     res.status(404).json({ error: 'API endpoint not found' });
