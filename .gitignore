@@ -2,3 +2,18 @@ node_modules/
 .env
 *.log
 coverage/
+
+# Backup files
+*.backup
+*.backup-*
+*.backup.*
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies and generated files
+node_modules/
+__pycache__/
+*.pyc
