@@ -1,0 +1,12 @@
+import "dotenv/config";
+import express from "express";
+import helmet from "helmet";
+const app=express();
+const PORT=Number(process.env.PORT||3006);
+const SERVICE_NAME="inventory-service";
+app.disable("x-powered-by");app.use(helmet());app.use(express.json({limit:"1mb"}));
+app.get("/health",(_req,res)=>res.status(200).json({status:"ok",service:SERVICE_NAME,port:PORT,timestamp:new Date().toISOString()}));
+app.get("/api/v1",(_req,res)=>res.status(200).json({service:SERVICE_NAME,version:"v1",message:"inventory service is running",endpoints:["/health"]}));
+app.use((req,res)=>res.status(404).json({error:"NOT_FOUND",service:SERVICE_NAME,path:req.originalUrl}));
+app.use((err,_req,res,_next)=>{console.error(err);res.status(500).json({error:"INTERNAL_SERVER_ERROR"});});
+app.listen(PORT,"127.0.0.1",()=>console.log(`[${SERVICE_NAME}] listening on 127.0.0.1:${PORT}`));
