@@ -2,6 +2,14 @@ import multer from 'multer';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+
+const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
+
+const uploadDirectory = path.resolve(
+    currentDirectory,
+    '../../../uploads/products'
+);
 
 const upload = multer({
     storage: multer.memoryStorage(),
@@ -75,11 +83,6 @@ export function uploadProductImage(req, res, next) {
                 });
             }
 
-            const uploadDirectory = path.resolve(
-                process.cwd(),
-                '../frontend/uploads'
-            );
-
             await fs.mkdir(uploadDirectory, { recursive: true });
 
             const filename = `${randomUUID()}.${extension}`;
@@ -90,7 +93,7 @@ export function uploadProductImage(req, res, next) {
                 { flag: 'wx', mode: 0o644 }
             );
 
-            req.body.image_url = `/uploads/${filename}`;
+            req.body.image_url = `/uploads/products/${filename}`;
 
             next();
         } catch (writeError) {
