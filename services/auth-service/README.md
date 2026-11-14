@@ -1,12 +1,12 @@
 # TechStore Auth Service
 
-Standalone Express authentication service. It migrates the existing TechStore customer registration/login behavior while keeping the existing PostgreSQL `users` table and PostgreSQL-backed session format during the transition.
+Standalone Express authentication service. It migrates the existing TechStore customer registration/login behavior while temporarily reusing the existing PostgreSQL `users` and `user_sessions` tables.
 
 ## Requirements
 
 - Node.js 18 or later
-- Access to the existing TechStore PostgreSQL database
-- Existing `users` table and `user_sessions` table (the monolith already uses `connect-pg-simple` for sessions)
+- Existing TechStore PostgreSQL database with `users` and `user_sessions` tables
+- Access to the same session secret used by the current monolith during this migration phase
 
 ## Configure and run
 
@@ -14,7 +14,8 @@ Run from this directory:
 
 ```bash
 cp .env.example .env
-# Edit .env and set DB_PASSWORD and a unique SESSION_SECRET (at least 32 characters).
+# Set DB_PASSWORD and copy SESSION_SECRET from the existing backend .env.
+# Keep COOKIE_SECURE=false while testing over HTTP. Set it to true after HTTPS is enabled.
 npm install
 npm start
 ```
@@ -51,7 +52,7 @@ curl -i -b /tmp/techstore-auth.cookies http://127.0.0.1:3001/api/auth/me
 curl -i -b /tmp/techstore-auth.cookies -X POST http://127.0.0.1:3001/api/auth/logout
 ```
 
-Use a test email and a unique password in your own environment. Do not run the sample registration repeatedly against production data.
+Use a test email and unique password in your own environment. Do not run the sample registration repeatedly against production data.
 
 ## Migration note
 
