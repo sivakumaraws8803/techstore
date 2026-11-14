@@ -33,7 +33,7 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.COOKIE_SECURE === "true",
     sameSite: "lax",
     maxAge: 8 * 60 * 60 * 1000
   }
@@ -77,7 +77,7 @@ app.use((req, res) => {
 });
 
 app.use((err, _req, res, _next) => {
-  console.error(`[${SERVICE_NAME}]`, err.message);
+  console.error(\`[\${SERVICE_NAME}]\`, err.message);
   if (res.headersSent) return;
   res.status(err.status || 500).json({
     error: err.status ? err.message : "Internal server error"
@@ -85,11 +85,11 @@ app.use((err, _req, res, _next) => {
 });
 
 const server = app.listen(PORT, "127.0.0.1", () => {
-  console.log(`[${SERVICE_NAME}] listening on 127.0.0.1:${PORT}`);
+  console.log(\`[\${SERVICE_NAME}] listening on 127.0.0.1:\${PORT}\`);
 });
 
 async function shutdown(signal) {
-  console.log(`[${SERVICE_NAME}] ${signal} received; shutting down`);
+  console.log(\`[\${SERVICE_NAME}] \${signal} received; shutting down\`);
   server.close(async () => {
     await pool.end();
     process.exit(0);
