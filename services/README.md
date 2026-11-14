@@ -1,40 +1,45 @@
 # TechStore Microservices
 
-Eight independently runnable Node.js services in this repository. The existing monolith (port 3000) is intentionally preserved during migration.
+Eight independently runnable Node.js service folders in this repository. The existing monolith (port 3000) is intentionally preserved during migration.
 
-| Service | Port | Responsibility |
-|---|---:|---|
-| auth-service | 3001 | Registration, login and identity |
-| product-service | 3002 | Product catalogue |
-| cart-service | 3003 | Shopping carts |
-| order-service | 3004 | Order lifecycle |
-| payment-service | 3005 | Payment orchestration (no live charge until a provider is configured) |
-| inventory-service | 3006 | Stock levels and reservations |
-| image-service | 3007 | Product image metadata/storage integration |
-| notification-service | 3008 | Email/SMS notification dispatch |
+| Service | Port | Responsibility | Current status |
+|---|---:|---|---|
+| auth-service | 3001 | Registration, login and identity | Implemented first migration slice; see service README |
+| product-service | 3002 | Product catalogue | Health-check scaffold |
+| cart-service | 3003 | Shopping carts | Health-check scaffold |
+| order-service | 3004 | Order lifecycle | Health-check scaffold |
+| payment-service | 3005 | Payment orchestration | Health-check scaffold; no live charging |
+| inventory-service | 3006 | Stock levels and reservations | Health-check scaffold |
+| image-service | 3007 | Product image upload/storage | Health-check scaffold |
+| notification-service | 3008 | Email/SMS dispatch | Health-check scaffold |
 
-## Run locally on the EC2 host
+## Run auth-service on EC2
 
 From the repository root:
 
 ```bash
-for d in services/*-service; do (cd "$d" && npm install); done
+cd services/auth-service
+cp .env.example .env
+# Edit .env: set DB_PASSWORD and a unique SESSION_SECRET (32+ characters).
+npm install
+npm start
 ```
 
-Create each service's environment file from `.env.example`, then run each service in a separate terminal or with a process manager:
+The service binds to `127.0.0.1:3001`. In another SSH session, test:
 
 ```bash
-cd services/auth-service && cp .env.example .env && npm start
+curl -i http://127.0.0.1:3001/health
 ```
 
-Repeat for the other service folders. Each service exposes `GET /health`.
+See [auth-service README](./auth-service/README.md) for endpoint and registration/login tests.
 
 ## Important migration rules
 
 - Keep the existing monolith on port 3000 until each feature has been migrated and tested.
 - Do not expose service ports publicly; route traffic through Nginx on the EC2 host.
-- Set a unique database schema/role per service before production cutover. Do not let services write to each other's tables.
+- The auth service temporarily reuses the existing `users` and `user_sessions` tables to preserve customer accounts and session compatibility during migration.
+- Before production cutover, establish clear service data ownership and least-privilege PostgreSQL roles. Do not let services write to each other's tables.
 - Secrets belong in environment variables or AWS Secrets Manager, never in Git.
-- Payment service is only an orchestration boundary. Configure and verify a payment provider before accepting real payments.
-- Image service currently exposes the service boundary; configure S3 and upload validation before production use.
-- These are service foundations, not a completed migration of existing business logic. Existing data and routes remain in the monolith until migrated deliberately.
+- Payment service must use a configured and verified payment provider before accepting real payments.
+- Configure S3 and upload validation before using image-service in production.
+- The remaining seven service folders are not yet complete business services. Their business logic, database migrations, integration tests and frontend/admin integration will be delivered in later phases.
