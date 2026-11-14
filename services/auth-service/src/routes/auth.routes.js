@@ -86,7 +86,7 @@ router.post("/logout", async (req, res, next) => {
     res.clearCookie("techstore.sid", {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production"
+      secure: process.env.COOKIE_SECURE === "true"
     });
     return res.json({ message: "Logout successful" });
   } catch (error) {
