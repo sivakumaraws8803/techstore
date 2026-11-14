@@ -1,5 +1,15 @@
-# payment-service
+# Payment Service
 
-Port 3005. Start with `npm install && npm start`; health check: `curl http://127.0.0.1:3005/health`.
+Port 3005; binds to 127.0.0.1.
 
-This is the independent service boundary. Payment provider integration and idempotent payment workflows must be implemented and tested before processing real payments. Never store card data or commit provider secrets.
+This is a development-only dummy payment simulator. It does not collect card details and does not transfer money.
+
+Apply `database/migrations/004_add_dummy_payments.sql` before starting the service.
+
+Use the same database credentials and exact SESSION_SECRET as Auth Service. Set PORT=3005 and COOKIE_SECURE=false for the current HTTP test environment.
+
+Endpoint: `POST /api/payments/orders/:orderId/simulate`
+
+Requires the customer's authenticated session and JSON body `{"outcome":"success"}`, `{"outcome":"failed"}`, or `{"outcome":"cancelled"}`.
+
+The service checks order ownership, locks the order row, records the payment attempt, and updates orders.payment_status in one transaction. Never use this simulator for real payments.
