@@ -20,10 +20,10 @@ function publicUser(row) {
 
 export async function authenticateUser(identifier, password) {
   const result = await pool.query(
-    `SELECT id, username, full_name, email, password_hash, role, is_active
+    \`SELECT id, username, full_name, email, password_hash, role, is_active
      FROM users
      WHERE LOWER(username) = LOWER($1) OR LOWER(email) = LOWER($1)
-     LIMIT 1`,
+     LIMIT 1\`,
     [identifier]
   );
 
@@ -35,7 +35,7 @@ export async function authenticateUser(identifier, password) {
 }
 
 export async function registerCustomer({ fullName, email, password }) {
-  const normalizedName = fullName.trim().replace(/\\s+/g, " ");
+  const normalizedName = fullName.trim().replace(/\s+/g, " ");
   const normalizedEmail = email.trim().toLowerCase();
 
   if (normalizedName.length < 2 || normalizedName.length > 100) {
@@ -43,7 +43,7 @@ export async function registerCustomer({ fullName, email, password }) {
   }
   if (
     normalizedEmail.length > 254 ||
-    !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(normalizedEmail)
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
   ) {
     throw httpError(400, "Please enter a valid email address.");
   }
@@ -60,14 +60,14 @@ export async function registerCustomer({ fullName, email, password }) {
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
-  const username = `customer_${randomBytes(8).toString("hex")}`;
+  const username = \`customer_\${randomBytes(8).toString("hex")}\`;
 
   try {
     const result = await pool.query(
-      `INSERT INTO users
+      \`INSERT INTO users
          (username, full_name, email, password_hash, role, is_active)
        VALUES ($1, $2, $3, $4, 'customer', TRUE)
-       RETURNING id, username, full_name, email, role`,
+       RETURNING id, username, full_name, email, role\`,
       [username, normalizedName, normalizedEmail, passwordHash]
     );
     return publicUser(result.rows[0]);
