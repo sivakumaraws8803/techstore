@@ -4,13 +4,14 @@
   "private": true,
   "type": "module",
   "main": "src/server.js",
-  "scripts": {
-    "start": "node src/server.js",
-    "dev": "node --watch src/server.js"
-  },
+  "scripts": { "start": "node src/server.js", "dev": "node --watch src/server.js" },
+  "engines": { "node": ">=18" },
   "dependencies": {
+    "connect-pg-simple": "^10.0.0",
     "dotenv": "^18.0.9",
     "express": "^5.3.0",
-    "helmet": "^8.3.0"
+    "express-session": "^1.18.2",
+    "helmet": "^8.3.0",
+    "pg": "^8.23.1"
   }
 }
