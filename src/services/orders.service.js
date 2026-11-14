@@ -104,7 +104,7 @@ export async function createCustomerOrder(customerId, items) {
 
 export async function getCustomerOrders(customerId) {
     const result = await pool.query(
-        `SELECT o.id, o.status, o.total_amount, o.created_at,
+        `SELECT o.id, o.status, o.payment_status, o.total_amount, o.created_at,
                 oi.product_id, oi.product_name, oi.quantity, oi.unit_price
          FROM orders o
          LEFT JOIN order_items oi ON oi.order_id = o.id
@@ -118,7 +118,7 @@ export async function getCustomerOrders(customerId) {
 
 export async function getAllOrders() {
     const result = await pool.query(
-        `SELECT o.id, o.customer_id, u.username, o.status,
+        `SELECT o.id, o.customer_id, u.username, o.status, o.payment_status,
                 o.total_amount, o.created_at,
                 oi.product_id, oi.product_name, oi.quantity, oi.unit_price
          FROM orders o
