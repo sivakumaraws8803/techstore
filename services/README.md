@@ -5,7 +5,7 @@ Eight independently runnable Node.js service folders in this repository. The exi
 | Service | Port | Responsibility | Current status |
 |---|---:|---|---|
 | auth-service | 3001 | Registration, login and identity | Implemented first migration slice; see service README |
-| product-service | 3002 | Product catalogue | Health-check scaffold |
+| product-service | 3002 | Product catalogue | Implemented first migration slice; see service README |
 | cart-service | 3003 | Shopping carts | Health-check scaffold |
 | order-service | 3004 | Order lifecycle | Health-check scaffold |
 | payment-service | 3005 | Payment orchestration | Health-check scaffold; no live charging |
@@ -42,4 +42,4 @@ See [auth-service README](./auth-service/README.md) for endpoint and registratio
 - Secrets belong in environment variables or AWS Secrets Manager, never in Git.
 - Payment service must use a configured and verified payment provider before accepting real payments.
 - Configure S3 and upload validation before using image-service in production.
-- The remaining seven service folders are not yet complete business services. Their business logic, database migrations, integration tests and frontend/admin integration will be delivered in later phases.
+- The remaining six service folders (cart, order, payment, inventory, image and notification) are not yet complete business services. Product Service still requires EC2 deployment and endpoint testing, then frontend/admin integration.
