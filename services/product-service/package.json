@@ -1,0 +1,19 @@
+{
+  "name": "product-service",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "helmet": "^8.3.0",
+    "connect-pg-simple": "^10.0.0",
+    "express-session": "^1.18.2",
+    "pg": "^8.23.1"
+  }
+}

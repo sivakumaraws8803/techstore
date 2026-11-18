@@ -1,0 +1,13 @@
+import "dotenv/config";
+import express from "express";
+import helmet from "helmet";
+import {SESClient,SendEmailCommand} from "@aws-sdk/client-ses";
+const app=express(),PORT=Number(process.env.PORT||3008);
+const ses=new SESClient({region:process.env.AWS_REGION||"ap-south-1"});
+app.disable("x-powered-by");app.use(helmet());app.use(express.json({limit:"20kb"}));
+const internal=(req,res,next)=>{if(!process.env.INTERNAL_API_KEY||req.get("x-internal-api-key")!==process.env.INTERNAL_API_KEY)return res.status(401).json({error:"Internal service authentication required"});next();};
+app.get("/health",(_req,res)=>res.json({status:"ok",service:"notification-service",provider:"aws-ses"}));
+app.post("/api/notifications/email",internal,async(req,res)=>{const {to,subject,text,html}=req.body||{};if(typeof to!=="string"||to.length>254||!/^\S+@\S+\.\S+$/.test(to)||typeof subject!=="string"||!subject.trim()||subject.length>200||(!text&&!html))return res.status(400).json({error:"Valid to, subject and text or html are required"});if(!process.env.SES_FROM_EMAIL)return res.status(503).json({error:"SES_FROM_EMAIL is not configured"});try{const result=await ses.send(new SendEmailCommand({Source:process.env.SES_FROM_EMAIL,Destination:{ToAddresses:[to]},Message:{Subject:{Data:subject,Charset:"UTF-8"},Body:{...(text?{Text:{Data:String(text).slice(0,10000),Charset:"UTF-8"}}:{}),...(html?{Html:{Data:String(html).slice(0,20000),Charset:"UTF-8"}}:{})}}}));res.status(202).json({message:"Email accepted by Amazon SES",messageId:result.MessageId});}catch(e){console.error("[notification-service] SES:",e.name,e.message);res.status(502).json({error:"Email provider rejected the request"});}});
+app.use((req,res)=>res.status(404).json({error:"NOT_FOUND",path:req.originalUrl}));
+app.use((e,_req,res,_next)=>{console.error("[notification-service]",e.message);if(!res.headersSent)res.status(500).json({error:"Notification service error"});});
+const server=app.listen(PORT,"127.0.0.1",()=>console.log("[notification-service] listening on 127.0.0.1:"+PORT));process.on("SIGTERM",()=>server.close(()=>process.exit(0)));process.on("SIGINT",()=>server.close(()=>process.exit(0)));

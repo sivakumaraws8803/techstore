@@ -18,3 +18,8 @@ node_modules/
 __pycache__/
 *.pyc
 uploads/
+
+# Authentication cookies - never commit
+owner-cookies.txt
+cookies.txt
+*-cookies.txt

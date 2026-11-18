@@ -12,6 +12,18 @@ export async function listActiveProducts() {
     return result.rows;
 }
 
+export async function listAllProducts() {
+    const result = await pool.query(`
+        SELECT id, name, description, category, price,
+               image_url, stock, is_active, created_by,
+               created_at, updated_at
+        FROM products
+        ORDER BY created_at DESC
+    `);
+
+    return result.rows;
+}
+
 export async function findProductById(id) {
     const result = await pool.query(
         `SELECT id, name, description, category, price,

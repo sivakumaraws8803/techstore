@@ -1,5 +1,6 @@
 import {
     listActiveProducts,
+    listAllProducts,
     findProductById,
     createProduct,
     updateProduct,
@@ -15,7 +16,11 @@ function validateProduct(data) {
 
     const { name, description, category, price, image_url } = data;
 
-    const stock = data.stock === undefined ? 0 : data.stock;
+    const rawStock = data.stock === undefined ? 0 : data.stock;
+    const stock =
+        typeof rawStock === 'string' && rawStock.trim() !== ''
+            ? Number(rawStock)
+            : rawStock;
 
     if (
         typeof name !== 'string' ||
@@ -98,6 +103,7 @@ function validateProduct(data) {
 
 export {
     listActiveProducts,
+    listAllProducts,
     findProductById,
     deactivateProduct
 };

@@ -1,5 +1,6 @@
 import {
     listActiveProducts,
+    listAllProducts,
     findProductById,
     addProduct,
     editProduct,
@@ -19,6 +20,15 @@ function parseProductId(value) {
 export async function listProductsHandler(req, res, next) {
     try {
         const products = await listActiveProducts();
+        res.json({ products });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function listAdminProductsHandler(req, res, next) {
+    try {
+        const products = await listAllProducts();
         res.json({ products });
     } catch (error) {
         next(error);
