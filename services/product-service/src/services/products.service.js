@@ -12,7 +12,12 @@ function validateProduct(data) {
   }
 
   const { name, description, category, price, image_url, brand } = data;
-  const stock = data.stock === undefined ? 0 : data.stock;
+  const rawStock = data.stock === undefined ? 0 : data.stock;
+  // Form submissions may encode numeric fields as strings; normalize stock
+  // before applying the non-negative whole-number validation.
+  const stock = typeof rawStock === "string" && /^\\d+$/.test(rawStock.trim())
+    ? Number(rawStock.trim())
+    : rawStock;
   const discount = data.discount_percent === undefined ? 0 : data.discount_percent;
 
   if (typeof name !== "string" || !name.trim() || name.trim().length > 150) {
