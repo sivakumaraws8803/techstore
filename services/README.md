@@ -1,45 +1,28 @@
-# TechStore Microservices
+# TechStore microservices
 
-Eight independently runnable Node.js service folders in this repository. The existing monolith (port 3000) is intentionally preserved during migration.
+The target service boundaries and local ports are:
 
-| Service | Port | Responsibility | Current status |
-|---|---:|---|---|
-| auth-service | 3001 | Registration, login and identity | Implemented first migration slice; see service README |
-| product-service | 3002 | Product catalogue | Implemented first migration slice; see service README |
-| cart-service | 3003 | Shopping carts | Health-check scaffold |
-| order-service | 3004 | Order lifecycle | Health-check scaffold |
-| payment-service | 3005 | Payment orchestration | Health-check scaffold; no live charging |
-| inventory-service | 3006 | Stock levels and reservations | Health-check scaffold |
-| image-service | 3007 | Product image upload/storage | Health-check scaffold |
-| notification-service | 3008 | Email/SMS dispatch | Health-check scaffold |
+| Service | Port | Responsibilities |
+|---|---:|---|
+| Auth | 3001 | Registration, login and identity |
+| Product | 3002 | Public catalogue and product administration |
+| Cart | 3003 | Customer cart |
+| Order | 3004 | Create orders, customer order history and order administration |
+| Payment | 3005 | Payment simulation (no real money movement) |
+| Inventory | 3006 | Stock records, reservations and release |
+| Image | 3007 | Validated product image upload |
+| Notification | 3008 | Email delivery through Amazon SES |
 
-## Run auth-service on EC2
+## Current migration phase
 
-From the repository root:
+The new Order, Inventory, Image and Notification service implementations are added alongside Auth, Product, Cart and Payment. The Order service currently uses the existing TechStore PostgreSQL schema and the existing shared session cookie so the current application can be migrated incrementally. Inventory has its own service-owned inventory table, but product stock/order placement has not yet been switched to inventory reservations. Image storage is local disk; Notification requires a verified SES sender and AWS credentials/role.
 
-```bash
-cd services/auth-service
-cp .env.example .env
-# Edit .env: set DB_PASSWORD and a unique SESSION_SECRET (32+ characters).
-npm install
-npm start
-```
+**This is not yet the final independent-database architecture.** Before removing the legacy API, complete the database-per-service data migration, switch all API consumers and Nginx routes, integrate order/inventory/payment/notification workflows, and pass end-to-end tests. Do not delete the legacy `src/` application until the cutover checklist is complete.
 
-The service binds to `127.0.0.1:3001`. In another SSH session, test:
+## Ports
 
-```bash
-curl -i http://127.0.0.1:3001/health
-```
+All Node services bind to `127.0.0.1`; expose them through Nginx only. Keep service environment files out of Git. Use each service's `.env.example` as a template and configure real secrets on the server.
 
-See [auth-service README](./auth-service/README.md) for endpoint and registration/login tests.
+## Internal service endpoints
 
-## Important migration rules
-
-- Keep the existing monolith on port 3000 until each feature has been migrated and tested.
-- Do not expose service ports publicly; route traffic through Nginx on the EC2 host.
-- The auth service temporarily reuses the existing `users` and `user_sessions` tables to preserve customer accounts and session compatibility during migration.
-- Before production cutover, establish clear service data ownership and least-privilege PostgreSQL roles. Do not let services write to each other's tables.
-- Secrets belong in environment variables or AWS Secrets Manager, never in Git.
-- Payment service must use a configured and verified payment provider before accepting real payments.
-- Configure S3 and upload validation before using image-service in production.
-- The remaining six service folders (cart, order, payment, inventory, image and notification) are not yet complete business services. Product Service still requires EC2 deployment and endpoint testing, then frontend/admin integration.
+Inventory and Notification endpoints require the `x-internal-api-key` header. Configure the same high-entropy key in trusted callers and the receiving service. Do not expose these endpoints directly to the public internet.
