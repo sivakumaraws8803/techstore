@@ -1,5 +1,6 @@
 import {
     listActiveProducts,
+    listAllProducts,
     findProductById,
     createProduct,
     updateProduct,
@@ -98,6 +99,7 @@ function validateProduct(data) {
 
 export {
     listActiveProducts,
+    listAllProducts,
     findProductById,
     deactivateProduct
 };
