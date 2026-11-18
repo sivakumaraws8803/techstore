@@ -65,6 +65,15 @@ export async function listActiveProducts() {
   return result.rows;
 }
 
+// Admin-only listing: includes active and inactive products.
+export async function listAdminProducts() {
+  const result = await pool.query(
+    `SELECT ${productColumns} FROM products
+     ORDER BY created_at DESC, id DESC`
+  );
+  return result.rows;
+}
+
 export async function findActiveProductById(id) {
   const result = await pool.query(
     `SELECT ${productColumns} FROM products WHERE id = $1 AND is_active = TRUE`,
