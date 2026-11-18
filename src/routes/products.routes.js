@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import {
     listProductsHandler,
+    listAdminProductsHandler,
     getProductHandler,
     createProductHandler,
     updateProductHandler,
@@ -13,6 +14,9 @@ import { requireRole } from '../middleware/role.middleware.js';
 import { uploadProductImage } from '../middleware/upload.middleware.js';
 
 const router = Router();
+
+// Admin users can view active and inactive products.
+router.get('/admin', requireAuth, requireRole('owner', 'product_manager'), listAdminProductsHandler);
 
 // Public customers can view active products.
 router.get('/', listProductsHandler);
