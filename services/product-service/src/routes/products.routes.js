@@ -1,7 +1,12 @@
 import { Router } from "express";
 import {
-  listActiveProducts, findActiveProductById, createProduct,
-  updateProduct, deactivateProduct, parseProductId
+  listActiveProducts,
+  listAdminProducts,
+  findActiveProductById,
+  createProduct,
+  updateProduct,
+  deactivateProduct,
+  parseProductId
 } from "../services/products.service.js";
 
 const router = Router();
@@ -28,6 +33,13 @@ function requireRole(...roles) {
 router.get("/", async (_req, res, next) => {
   try {
     res.json({ products: await listActiveProducts() });
+  } catch (error) { next(error); }
+});
+
+// Keep this route before "/:id" so "admin" is not parsed as a product ID.
+router.get("/admin", requireAuth, requireRole("owner", "product_manager"), async (_req, res, next) => {
+  try {
+    res.json({ products: await listAdminProducts() });
   } catch (error) { next(error); }
 });
 
