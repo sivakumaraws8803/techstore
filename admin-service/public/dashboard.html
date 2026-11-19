@@ -1,47 +1,70 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex,nofollow">
-  <title>TechStore Admin | Dashboard</title>
-  <link rel="stylesheet" href="/admin.css">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#f5f6f8">
+  <title>TechStore · Operations</title><link rel="stylesheet" href="/admin.css">
 </head>
-<body class="dashboard-page">
-  <header class="topbar">
-    <a class="brand" href="/dashboard"><span class="brand-mark small">TS</span><span>TechStore <b>Admin</b></span></a>
-    <div class="top-actions"><span id="user-label" class="user-label">Checking session…</span><button id="logout" class="button secondary">Sign out</button></div>
-  </header>
-  <main class="content">
-    <div class="page-heading">
-      <div><p class="eyebrow">OVERVIEW</p><h1>Product management</h1><p class="muted">Manage the catalogue shown on your customer storefront.</p></div>
-      <button id="refresh" class="button secondary">Refresh products</button>
+<body class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="/dashboard"><span class="brand-mark">T</span><span>techstore<span class="brand-sub">OPERATIONS</span></span></a>
+    <div class="workspace"><span class="workspace-dot"></span><span><b>Store workspace</b><small>Production environment</small></span><span class="chevron">⌄</span></div>
+    <p class="nav-label">WORKSPACE</p>
+    <nav class="side-nav">
+      <a class="nav-link" href="#overview"><span>◫</span> Overview</a>
+      <a class="nav-link active" href="#inventory"><span>▦</span> Products <span class="nav-count" id="nav-product-count">—</span></a>
+      <a class="nav-link" href="#inventory"><span>▤</span> Inventory</a>
+      <a class="nav-link" href="#inventory"><span>⌁</span> Categories</a>
+    </nav>
+    <p class="nav-label">MANAGEMENT</p>
+    <nav class="side-nav">
+      <a class="nav-link muted-link" href="#coming-soon"><span>▣</span> Orders <em>Later</em></a>
+      <a class="nav-link muted-link" href="#coming-soon"><span>♙</span> Customers <em>Later</em></a>
+      <a class="nav-link muted-link" href="#coming-soon"><span>▥</span> Reports <em>Later</em></a>
+    </nav>
+    <div class="sidebar-bottom"><div class="help-card"><b>Need a hand?</b><small>Manage your store with confidence.</small><a href="mailto:support@cloudlearning.online">Contact support ↗</a></div><button id="logout" class="profile"><span class="avatar" id="avatar">S</span><span><b id="user-label">Loading account</b><small>Store owner</small></span><span class="profile-more">···</span></button></div>
+  </aside>
+  <main class="main-area">
+    <header class="topbar"><button class="mobile-menu" id="mobile-menu" aria-label="Toggle menu">☰</button><div class="breadcrumb">Workspace <span>/</span> <b>Products & inventory</b></div><div class="topbar-right"><span class="live-dot"></span><span class="live-label">Store connected</span><button class="icon-button" id="refresh" title="Refresh">↻</button><button class="signout" id="logout-top">Sign out</button></div></header>
+    <div class="page-wrap">
+      <section id="overview" class="welcome-row"><div><p class="eyebrow">STORE OVERVIEW</p><h1>Good work starts with clarity.</h1><p class="subheading">A single place to manage your product catalogue and inventory.</p></div><button class="button primary" id="add-product-top"><span>＋</span> Add product</button></section>
+      <section class="metrics" aria-label="Inventory summary">
+        <article class="metric-card"><div class="metric-top"><span>Total products</span><span class="metric-icon">▦</span></div><strong id="total-count">—</strong><small>Across your catalogue</small></article>
+        <article class="metric-card"><div class="metric-top"><span>Active products</span><span class="metric-icon green">↗</span></div><strong id="active-count">—</strong><small>Visible on storefront</small></article>
+        <article class="metric-card"><div class="metric-top"><span>Low stock</span><span class="metric-icon amber">!</span></div><strong id="low-count">—</strong><small>5 units or fewer</small></article>
+        <article class="metric-card"><div class="metric-top"><span>Out of stock</span><span class="metric-icon red">−</span></div><strong id="out-count">—</strong><small>Needs replenishment</small></article>
+      </section>
+      <section class="inventory-panel" id="inventory">
+        <div class="section-heading"><div><p class="eyebrow">CATALOGUE</p><h2>Products & inventory</h2><p>Keep product information and stock levels up to date.</p></div><button class="button primary" id="add-product"><span>＋</span> New product</button></div>
+        <div class="toolbar"><label class="search-box"><span>⌕</span><input id="search" type="search" placeholder="Search products, SKU or category…"></label><select id="category-filter" aria-label="Filter by category"><option value="">All categories</option></select><select id="status-filter" aria-label="Filter by status"><option value="all">All status</option><option value="active">Active</option><option value="inactive">Inactive</option><option value="low">Low stock</option><option value="out">Out of stock</option></select><span id="list-status" class="result-count"></span></div>
+        <div class="table-scroll"><table class="inventory-table"><thead><tr><th class="check-col"><input type="checkbox" id="select-all" aria-label="Select all visible"></th><th>PRODUCT</th><th>STATUS</th><th>PRICE</th><th>INVENTORY</th><th>CATEGORY</th><th class="actions-col">ACTION</th></tr></thead><tbody id="products-body"><tr><td colspan="7" class="empty">Loading inventory…</td></tr></tbody></table></div>
+        <div class="table-footer"><span id="table-summary">Loading products…</span><span>Inventory updates are saved to your store database.</span></div>
+      </section>
+      <footer class="page-footer"><span>TechStore Operations</span><span>Secure admin workspace · <span id="last-updated">Not synced yet</span></span></footer>
     </div>
-    <section class="stats-grid">
-      <article class="stat-card"><span class="muted">Total products</span><strong id="total-count">—</strong></article>
-      <article class="stat-card"><span class="muted">Active products</span><strong id="active-count">—</strong></article>
-      <article class="stat-card"><span class="muted">Inactive products</span><strong id="inactive-count">—</strong></article>
-    </section>
-    <section class="panel">
-      <div class="panel-heading"><div><h2>Add a product</h2><p class="muted">New products are saved through the Product Service.</p></div></div>
-      <form id="product-form" class="product-form">
-        <div class="field"><label for="name">Product name *</label><input id="name" required maxlength="150"></div>
-        <div class="field"><label for="category">Category *</label><input id="category" required maxlength="50"></div>
-        <div class="field"><label for="price">Price (₹) *</label><input id="price" type="number" min="0" step="0.01" required></div>
-        <div class="field"><label for="stock">Stock quantity *</label><input id="stock" type="number" min="0" step="1" value="0" required></div>
-        <div class="field"><label for="brand">Brand</label><input id="brand" maxlength="100"></div>
-        <div class="field"><label for="discount">Discount (%)</label><input id="discount" type="number" min="0" max="100" step="0.01" value="0"></div>
-        <div class="field wide"><label for="image_url">Image URL</label><input id="image_url" type="url" placeholder="https://example.com/product.jpg"></div>
-        <div class="field wide"><label for="description">Description</label><textarea id="description" rows="3"></textarea></div>
-        <div class="form-footer"><p id="form-message" class="message" role="status" aria-live="polite"></p><button class="button primary" type="submit">Add product</button></div>
+  </main>
+  <div class="modal-backdrop" id="product-modal" hidden>
+    <section class="product-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-heading"><div><p class="eyebrow">PRODUCT DETAILS</p><h2 id="modal-title">Add a product</h2><p>Give your product the details customers need.</p></div><button type="button" class="close-button" id="close-modal" aria-label="Close">×</button></div>
+      <form id="product-form">
+        <div class="image-upload">
+          <input id="image" type="file" accept="image/jpeg,image/png,image/webp,image/avif" hidden>
+          <div class="image-preview" id="image-preview"><span>▧</span><small>Product image</small></div>
+          <div class="upload-copy"><b>Product photography</b><p>Use a clear, well-lit image. JPG, PNG, WEBP or AVIF, up to 5 MB.</p><button type="button" class="button secondary" id="choose-image">Choose image</button><button type="button" class="text-button" id="remove-image">Remove image</button></div>
+        </div>
+        <div class="form-grid">
+          <label class="form-field span-2">Product name <sup>*</sup><input id="name" required maxlength="150" placeholder="e.g. Wireless headphones"></label>
+          <label class="form-field">Category <sup>*</sup><input id="category" required maxlength="50" placeholder="Electronics"></label>
+          <label class="form-field">Brand<input id="brand" maxlength="100" placeholder="Brand name"></label>
+          <label class="form-field">Price (₹) <sup>*</sup><input id="price" type="number" min="0" step="0.01" required placeholder="0.00"></label>
+          <label class="form-field">Stock quantity <sup>*</sup><input id="stock" type="number" min="0" step="1" value="0" required></label>
+          <label class="form-field">Discount (%)<input id="discount" type="number" min="0" max="100" step="0.01" value="0"></label>
+          <label class="form-field span-2">Description<textarea id="description" rows="3" placeholder="Product details and key features…"></textarea></label>
+        </div>
+        <p id="form-message" class="form-message" role="status" aria-live="polite"></p>
+        <div class="modal-actions"><button type="button" class="button secondary" id="cancel-modal">Cancel</button><button type="submit" class="button primary" id="save-product">Save product</button></div>
       </form>
     </section>
-    <section class="panel">
-      <div class="panel-heading"><div><h2>Products</h2><p class="muted">Active and inactive catalogue items.</p></div><span id="list-status" class="muted"></span></div>
-      <div class="table-wrap"><table><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Action</th></tr></thead><tbody id="products-body"><tr><td colspan="6" class="empty">Loading products…</td></tr></tbody></table></div>
-    </section>
-    <p class="footer-note">Admin Web Service · Auth and Product APIs remain on their existing services.</p>
-  </main>
+  </div>
   <script src="/dashboard.js" defer></script>
-</body>
-</html>
+</body></html>
