@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>TechStore Admin | Dashboard</title>
+  <link rel="stylesheet" href="/admin.css">
+</head>
+<body class="dashboard-page">
+  <header class="topbar">
+    <a class="brand" href="/dashboard"><span class="brand-mark small">TS</span><span>TechStore <b>Admin</b></span></a>
+    <div class="top-actions"><span id="user-label" class="user-label">Checking session…</span><button id="logout" class="button secondary">Sign out</button></div>
+  </header>
+  <main class="content">
+    <div class="page-heading">
+      <div><p class="eyebrow">OVERVIEW</p><h1>Product management</h1><p class="muted">Manage the catalogue shown on your customer storefront.</p></div>
+      <button id="refresh" class="button secondary">Refresh products</button>
+    </div>
+    <section class="stats-grid">
+      <article class="stat-card"><span class="muted">Total products</span><strong id="total-count">—</strong></article>
+      <article class="stat-card"><span class="muted">Active products</span><strong id="active-count">—</strong></article>
+      <article class="stat-card"><span class="muted">Inactive products</span><strong id="inactive-count">—</strong></article>
+    </section>
+    <section class="panel">
+      <div class="panel-heading"><div><h2>Add a product</h2><p class="muted">New products are saved through the Product Service.</p></div></div>
+      <form id="product-form" class="product-form">
+        <div class="field"><label for="name">Product name *</label><input id="name" required maxlength="150"></div>
+        <div class="field"><label for="category">Category *</label><input id="category" required maxlength="50"></div>
+        <div class="field"><label for="price">Price (₹) *</label><input id="price" type="number" min="0" step="0.01" required></div>
+        <div class="field"><label for="stock">Stock quantity *</label><input id="stock" type="number" min="0" step="1" value="0" required></div>
+        <div class="field"><label for="brand">Brand</label><input id="brand" maxlength="100"></div>
+        <div class="field"><label for="discount">Discount (%)</label><input id="discount" type="number" min="0" max="100" step="0.01" value="0"></div>
+        <div class="field wide"><label for="image_url">Image URL</label><input id="image_url" type="url" placeholder="https://example.com/product.jpg"></div>
+        <div class="field wide"><label for="description">Description</label><textarea id="description" rows="3"></textarea></div>
+        <div class="form-footer"><p id="form-message" class="message" role="status" aria-live="polite"></p><button class="button primary" type="submit">Add product</button></div>
+      </form>
+    </section>
+    <section class="panel">
+      <div class="panel-heading"><div><h2>Products</h2><p class="muted">Active and inactive catalogue items.</p></div><span id="list-status" class="muted"></span></div>
+      <div class="table-wrap"><table><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Action</th></tr></thead><tbody id="products-body"><tr><td colspan="6" class="empty">Loading products…</td></tr></tbody></table></div>
+    </section>
+    <p class="footer-note">Admin Web Service · Auth and Product APIs remain on their existing services.</p>
+  </main>
+  <script src="/dashboard.js" defer></script>
+</body>
+</html>
