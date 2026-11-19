@@ -176,7 +176,7 @@ form.addEventListener("submit", async event => {
   if (selectedImage) payload.append("image", selectedImage);
   else if (editingProduct?.image_url) payload.append("image_url", editingProduct.image_url);
   try {
-    await api(editingProduct ? "/api/products/" + encodeURIComponent(editingProduct.id) : "/api/products", {
+    await api(editingProduct ? "/api/products/" + encodeURIComponent(editingProduct.id) : "/api/products/", {
       method: editingProduct ? "PUT" : "POST", body: payload
     });
     closeModal(); await loadProducts();
