@@ -1,50 +1,47 @@
 # TechStore Admin Web Service
 
-A separate Node.js web application for the admin hostname. It runs independently from the customer storefront and existing Auth/Product services.
+Separate owner-facing admin application for `admin.cloudlearning.online`.
 
-## Runtime
+## Runtime and routes
+- Admin Web: `127.0.0.1:3010`
+- Auth API: `127.0.0.1:3001`
+- Product API: `127.0.0.1:3002`
+- Health check: `GET /health`
 
-- Default bind: 127.0.0.1:3010
-- Health check: GET /health
-- Login page: /
-- Dashboard: /dashboard
-- Requires Node.js 18+ and Express 5 (declared in package.json).
+## Admin capabilities
+- Responsive Apple-inspired operations dashboard with sidebar navigation.
+- Product catalogue with search, category/status filters, image thumbnails and stock status.
+- Create and edit products using a real multipart image upload (JPG, PNG, WEBP, AVIF; 5 MB maximum).
+- Inventory quantity updates, low-stock and out-of-stock indicators.
+- Product activation/deactivation using the existing Product Service.
+- Existing owner authentication and PostgreSQL-backed session are retained.
 
-## API routing required at the reverse proxy
+## Image storage
+Product Service stores uploads under `/usr/share/nginx/techstore/uploads/products` by default and writes the public path into the existing `products.image_url` column. The customer Nginx configuration already serves `/uploads/products/` from that directory. Add the same static alias to the admin virtual host so image previews load on the admin hostname:
 
-On the admin virtual host, proxy these paths to the existing services while preserving the request URI and browser cookie:
+```nginx
+location ^~ /uploads/products/ {
+    alias /usr/share/nginx/techstore/uploads/products/;
+    autoindex off;
+    add_header X-Content-Type-Options nosniff always;
+}
+```
 
-- /api/auth/ -> http://127.0.0.1:3001
-- /api/products/ -> http://127.0.0.1:3002
+Ensure the Linux account running Product Service can write to the upload directory. Do not change the database schema or replace the customer frontend.
 
-The Auth and Product services must share the same SESSION_SECRET, PostgreSQL session table and cookie configuration. Keep the session cookie host-only; do not set a broad Domain attribute. The admin hostname is the browser origin for login and product requests.
-
-## Features in this first release
-
-- Separate owner-only sign-in using the existing Auth Service and existing owner account.
-- Owner session verification on dashboard load.
-- Product listing, product creation, and product deactivation through Product Service.
-- New products use the existing product database and appear in the customer catalogue when active.
-- Sign out through Auth Service.
-
-Product creation currently accepts an image URL. It does not upload image files. Order and customer management are not included in this first independent-service release; the existing customer app and original admin page are not modified.
-
-## Install and run on EC2
-
+## Install and deploy
 From the backend repository root:
-
 ```bash
-cd /usr/share/nginx/techstore/backend
-cd admin-service
-npm install
-PORT=3010 HOST=127.0.0.1 npm start
-```
+git pull origin microservices-refactor
+cd services/product-service && npm install
+cd ../../admin-service && npm install
+``
 
-For PM2, from the backend repository root:
-
+Restart only the services whose code changed:
 ```bash
-pm2 start admin-service/server.js --name admin-web --cwd /usr/share/nginx/techstore/backend/admin-service
+pm2 restart product-service
+pm2 restart admin-web
 pm2 save
-```
+``
 
-Do not stop the existing monolith or replace the existing frontend admin.html during this migration.
+Before production use, verify owner login, image upload, product create/edit, stock updates and customer storefront image rendering. Keep a backup of the upload directory and database.
