@@ -13,9 +13,7 @@ function validateProduct(data) {
 
   const { name, description, category, price, image_url, brand } = data;
   const rawStock = data.stock === undefined ? 0 : data.stock;
-  // Form submissions may encode numeric fields as strings; normalize stock
-  // before applying the non-negative whole-number validation.
-  const stock = typeof rawStock === "string" && /^\\d+$/.test(rawStock.trim())
+  const stock = typeof rawStock === "string" && /^\d+$/.test(rawStock.trim())
     ? Number(rawStock.trim())
     : rawStock;
   const discount = data.discount_percent === undefined ? 0 : data.discount_percent;
@@ -70,7 +68,6 @@ export async function listActiveProducts() {
   return result.rows;
 }
 
-// Admin-only listing: includes active and inactive products.
 export async function listAdminProducts() {
   const result = await pool.query(
     `SELECT ${productColumns} FROM products
