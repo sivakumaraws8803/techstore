@@ -34,7 +34,7 @@ router.post("/", requireOwner, async (req, res, next) => {
     const name = cleanName(req.body?.name);
     const result = await pool.query(
       "INSERT INTO categories(name,slug,description) VALUES($1,$2,$3) RETURNING id,name,slug,description,is_active,created_at,updated_at",
-      [name, slugify(name), typeof req.body.description === "string" ? req.body.description.trim() || null : null]
+      [name, slugify(name), typeof req.body?.description === "string" ? req.body.description.trim() || null : null]
     );
     res.status(201).json({ message: "Category created.", category: result.rows[0] });
   } catch (error) {
@@ -56,7 +56,7 @@ router.put("/:id", requireOwner, async (req, res, next) => {
       const oldName = existing.rows[0].name;
       const result = await client.query(
         "UPDATE categories SET name=$1,slug=$2,description=$3,updated_at=NOW() WHERE id=$4 RETURNING id,name,slug,description,is_active,created_at,updated_at",
-        [name, slugify(name), typeof req.body.description === "string" ? req.body.description.trim() || null : null, id]
+        [name, slugify(name), typeof req.body?.description === "string" ? req.body.description.trim() || null : null, id]
       );
       await client.query("UPDATE products SET category=$1,updated_at=NOW() WHERE LOWER(TRIM(category))=LOWER($2)", [name, oldName]);
       await client.query("COMMIT");
