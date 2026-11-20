@@ -103,7 +103,7 @@ export async function updateProduct(id, data) {
     `UPDATE products SET
        name=$1, description=$2, category=$3, price=$4, image_url=$5,
        stock=$6, brand=$7, discount_percent=$8, updated_at=NOW()
-     WHERE id=$9 AND is_active=TRUE
+     WHERE id=$9
      RETURNING ${productColumns}`,
     [product.name, product.description, product.category, product.price,
      product.image_url, product.stock, product.brand, product.discount_percent, id]
