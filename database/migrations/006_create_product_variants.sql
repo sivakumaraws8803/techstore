@@ -26,4 +26,7 @@ WHERE NOT EXISTS (
   SELECT 1 FROM product_variants v WHERE v.product_id = p.id
 );
 
+GRANT SELECT, INSERT, UPDATE ON TABLE product_variants TO techstore_app;
+GRANT USAGE, SELECT ON SEQUENCE product_variants_id_seq TO techstore_app;
+
 COMMIT;
