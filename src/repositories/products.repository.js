@@ -3,7 +3,7 @@ import { pool } from "../config/database.js";
 export async function listActiveProducts() {
     const result = await pool.query(`
         SELECT id, name, description, category, price,
-               image_url, stock, created_at
+               image_url, stock, color_variants, created_at
         FROM products
         WHERE is_active = TRUE
         ORDER BY created_at DESC
@@ -15,7 +15,7 @@ export async function listActiveProducts() {
 export async function findProductById(id) {
     const result = await pool.query(
         `SELECT id, name, description, category, price,
-                image_url, stock, is_active, created_by,
+                image_url, stock, color_variants, is_active, created_by,
                 created_at, updated_at
          FROM products
          WHERE id = $1`,
@@ -32,15 +32,16 @@ export async function createProduct(product, userId) {
         category,
         price,
         image_url,
-        stock = 0
+        stock = 0,
+        color_variants = []
     } = product;
 
     const result = await pool.query(
         `INSERT INTO products
-            (name, description, category, price, image_url, stock, created_by)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+            (name, description, category, price, image_url, stock, color_variants, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8)
          RETURNING id, name, description, category, price,
-                   image_url, stock, is_active, created_by, created_at`,
+                   image_url, stock, color_variants, is_active, created_by, created_at`,
         [
             name,
             description || null,
@@ -48,6 +49,7 @@ export async function createProduct(product, userId) {
             price,
             image_url || null,
             stock,
+            JSON.stringify(color_variants),
             userId
         ]
     );
@@ -62,7 +64,8 @@ export async function updateProduct(id, product) {
         category,
         price,
         image_url,
-        stock
+        stock,
+        color_variants = []
     } = product;
 
     const result = await pool.query(
@@ -73,10 +76,11 @@ export async function updateProduct(id, product) {
              price = $4,
              image_url = $5,
              stock = $6,
+             color_variants = $7::jsonb,
              updated_at = NOW()
-         WHERE id = $7
+         WHERE id = $8
          RETURNING id, name, description, category, price,
-                   image_url, stock, is_active, created_by, updated_at`,
+                   image_url, stock, color_variants, is_active, created_by, updated_at`,
         [
             name,
             description || null,
@@ -84,6 +88,7 @@ export async function updateProduct(id, product) {
             price,
             image_url || null,
             stock,
+            JSON.stringify(color_variants),
             id
         ]
     );
