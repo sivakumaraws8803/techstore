@@ -92,15 +92,31 @@ export async function findActiveProductById(id) {
 export async function createProduct(data, userId) {
   const product = validateProduct(data);
   await assertActiveCategory(product.category);
-  const result = await pool.query(
-    `INSERT INTO products
-      (name, description, category, price, image_url, stock, brand, discount_percent, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-     RETURNING ${productColumns}`,
-    [product.name, product.description, product.category, product.price,
-     product.image_url, product.stock, product.brand, product.discount_percent, userId]
-  );
-  return result.rows[0];
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await client.query(
+      `INSERT INTO products
+        (name, description, category, price, image_url, stock, brand, discount_percent, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       RETURNING ${productColumns}`,
+      [product.name, product.description, product.category, product.price,
+       product.image_url, product.stock, product.brand, product.discount_percent, userId]
+    );
+    const created = result.rows[0];
+    await client.query(
+      `INSERT INTO product_variants(product_id,sku,name,attributes,price,stock,image_url)
+       VALUES($1,$2,'Standard','{}'::jsonb,$3,$4,$5)`,
+      [created.id, "TS-" + created.id + "-DEFAULT", product.price, product.stock, product.image_url]
+    );
+    await client.query("COMMIT");
+    return created;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function updateProduct(id, data) {
@@ -115,7 +131,24 @@ export async function updateProduct(id, data) {
     [product.name, product.description, product.category, product.price,
      product.image_url, product.stock, product.brand, product.discount_percent, id]
   );
-  return result.rows[0] || null;
+  if (!result.rows[0]) return null;
+  const variantSummary = await pool.query(
+    "SELECT COUNT(*)::int AS total FROM product_variants WHERE product_id=$1 AND is_active=TRUE",
+    [id]
+  );
+  if (variantSummary.rows[0].total === 1) {
+    await pool.query(
+      "UPDATE product_variants SET price=$1,stock=$2,image_url=$3,updated_at=NOW() WHERE product_id=$4 AND is_active=TRUE",
+      [product.price,product.stock,product.image_url,id]
+    );
+  } else if (variantSummary.rows[0].total > 1) {
+    await pool.query(
+      "UPDATE products SET price=COALESCE((SELECT MIN(price) FROM product_variants WHERE product_id=$1 AND is_active=TRUE),price), stock=COALESCE((SELECT SUM(stock) FROM product_variants WHERE product_id=$1 AND is_active=TRUE),0) WHERE id=$1",
+      [id]
+    );
+  }
+  const refreshed = await pool.query(`SELECT ${productColumns} FROM products WHERE id=$1`,[id]);
+  return refreshed.rows[0];
 }
 
 export async function deactivateProduct(id) {
