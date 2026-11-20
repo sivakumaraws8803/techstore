@@ -86,6 +86,7 @@ router.patch("/:id/status", owner, async (req, res, next) => {
       "UPDATE product_variants SET is_active=$1,updated_at=NOW() WHERE id=$2 RETURNING id,product_id,is_active",
       [req.body.is_active,req.params.id]);
     if (!result.rowCount) return res.status(404).json({ error: "Variant not found." });
+    await syncProductSummary(result.rows[0].product_id);
     res.json({ variant: result.rows[0] });
   } catch (error) { next(error); }
 });
