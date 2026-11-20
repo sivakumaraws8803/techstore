@@ -24,6 +24,7 @@ app.get("/", (_req, res) => res.sendFile(path.join(publicDir, "login.html")));
 app.get("/login", (_req, res) => res.sendFile(path.join(publicDir, "login.html")));
 app.get("/dashboard", (_req, res) => res.sendFile(path.join(publicDir, "dashboard.html")));
 app.get("/categories", (_req, res) => res.sendFile(path.join(publicDir, "categories.html")));
+app.get("/variants", (_req, res) => res.sendFile(path.join(publicDir, "variants.html")));
 
 app.use((_req, res) => res.status(404).send("Not found"));
 
