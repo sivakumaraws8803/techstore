@@ -20,6 +20,16 @@ function slugify(value) {
   return value.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
 }
 
+// Public storefront API - active categories and active product counts.
+router.get("/public", async (_req, res, next) => {
+  try {
+    const result = await pool.query(
+      "SELECT c.id,c.name,c.slug,c.description,COUNT(p.id)::int AS product_count FROM categories c LEFT JOIN products p ON LOWER(TRIM(p.category))=LOWER(TRIM(c.name)) AND p.is_active=TRUE WHERE c.is_active=TRUE GROUP BY c.id ORDER BY c.name"
+    );
+    res.json({ categories: result.rows });
+  } catch (error) { next(error); }
+});
+
 router.get("/", requireOwner, async (_req, res, next) => {
   try {
     const result = await pool.query(
