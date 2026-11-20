@@ -14,7 +14,7 @@
       <a class="nav-link" href="#overview"><span>◫</span> Overview</a>
       <a class="nav-link active" href="#inventory"><span>▦</span> Products <span class="nav-count" id="nav-product-count">—</span></a>
       <a class="nav-link" href="#inventory"><span>▤</span> Inventory</a>
-      <a class="nav-link" href="#inventory"><span>⌁</span> Categories</a>
+      <a class="nav-link" href="/categories"><span>⌁</span> Categories</a>
     </nav>
     <p class="nav-label">MANAGEMENT</p>
     <nav class="side-nav">
@@ -54,7 +54,7 @@
         </div>
         <div class="form-grid">
           <label class="form-field span-2">Product name <sup>*</sup><input id="name" required maxlength="150" placeholder="e.g. Wireless headphones"></label>
-          <label class="form-field">Category <sup>*</sup><input id="category" required maxlength="50" placeholder="Electronics"></label>
+          <label class="form-field">Category <sup>*</sup><select id="category" required><option value="">Loading categories…</option></select></label>
           <label class="form-field">Brand<input id="brand" maxlength="100" placeholder="Brand name"></label>
           <label class="form-field">Price (₹) <sup>*</sup><input id="price" type="number" min="0" step="0.01" required placeholder="0.00"></label>
           <label class="form-field">Stock quantity <sup>*</sup><input id="stock" type="number" min="0" step="1" value="0" required></label>
