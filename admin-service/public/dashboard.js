@@ -102,6 +102,9 @@ function renderProducts() {
     if (p.is_active) {
       const deactivate = node("button", "row-action danger-text", "Deactivate"); deactivate.type = "button";
       deactivate.addEventListener("click", () => deactivateProduct(p, deactivate)); actionCell.append(deactivate);
+    } else {
+      const activate = node("button", "row-action", "Activate"); activate.type = "button";
+      activate.addEventListener("click", () => activateProduct(p, activate)); actionCell.append(activate);
     }
     tr.append(checkCell, productCell, statusCell, priceCell, inventoryCell, categoryCell, actionCell);
     body.append(tr);
@@ -153,6 +156,18 @@ async function deactivateProduct(product, button) {
   button.disabled = true;
   try { await api("/api/products/" + encodeURIComponent(product.id) + "/deactivate", { method: "PATCH" }); await loadProducts(); }
   catch (error) { alert(error.message); button.disabled = false; }
+}
+
+async function activateProduct(product, button) {
+  if (!confirm("Activate “" + product.name + "” and make it visible in the customer storefront?")) return;
+  button.disabled = true;
+  try {
+    await api("/api/products/" + encodeURIComponent(product.id) + "/activate", { method: "PATCH" });
+    await loadProducts();
+  } catch (error) {
+    alert(error.message);
+    button.disabled = false;
+  }
 }
 $("#image").addEventListener("change", event => {
   const file = event.target.files?.[0];
