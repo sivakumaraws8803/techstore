@@ -14,6 +14,7 @@ function validateProduct(data) {
     }
 
     const { name, description, category, price, image_url } = data;
+    const colorVariants = data.color_variants === undefined ? [] : data.color_variants;
 
     const stock = data.stock === undefined ? 0 : data.stock;
 
@@ -86,13 +87,47 @@ function validateProduct(data) {
         throw error;
     }
 
+    if (!Array.isArray(colorVariants) || colorVariants.length > 20) {
+        const error = new Error('Color variants must be an array with no more than 20 items');
+        error.status = 400;
+        throw error;
+    }
+
+    const normalizedVariants = colorVariants.map((variant) => {
+        if (!variant || typeof variant !== 'object' || Array.isArray(variant) ||
+            typeof variant.name !== 'string' || !variant.name.trim() ||
+            typeof variant.image_url !== 'string' || !variant.image_url.trim()) {
+            const error = new Error('Each color variant requires a name and image_url');
+            error.status = 400;
+            throw error;
+        }
+        if (variant.price !== undefined && (!Number.isFinite(Number(variant.price)) || Number(variant.price) < 0)) {
+            const error = new Error('Variant price must be a non-negative number');
+            error.status = 400;
+            throw error;
+        }
+        if (variant.stock !== undefined && (!Number.isSafeInteger(variant.stock) || variant.stock < 0)) {
+            const error = new Error('Variant stock must be a non-negative whole number');
+            error.status = 400;
+            throw error;
+        }
+        return {
+            name: variant.name.trim(),
+            image_url: variant.image_url.trim(),
+            hex: typeof variant.hex === 'string' ? variant.hex : null,
+            price: variant.price === undefined ? null : Number(variant.price),
+            stock: variant.stock === undefined ? null : variant.stock
+        };
+    });
+
     return {
         name: name.trim(),
         description: description?.trim() || null,
         category: category.trim(),
         price: Number(price),
         image_url: image_url?.trim() || null,
-        stock
+        stock,
+        color_variants: normalizedVariants
     };
 }
 
