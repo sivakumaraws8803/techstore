@@ -7,6 +7,7 @@ import connectPgSimple from "connect-pg-simple";
 import { pool } from "./config/database.js";
 import productsRoutes from "./routes/products.routes.js";
 import categoriesRoutes from "./routes/categories.routes.js";
+import variantsRoutes from "./routes/variants.routes.js";
 
 const app = express();
 const PORT = Number(process.env.PORT || 3002);
@@ -59,6 +60,7 @@ app.get("/health", async (_req, res) => {
 });
 
 app.use("/api/products/categories", categoriesRoutes);
+app.use("/api/variants", variantsRoutes);
 app.use("/api/products", productsRoutes);
 
 app.get("/api/v1", (_req, res) => {
@@ -68,6 +70,11 @@ app.get("/api/v1", (_req, res) => {
     endpoints: [
       "GET /api/products",
       "GET /api/products/:id",
+      "GET /api/variants/product/:productId",
+      "GET /api/variants/admin/product/:productId",
+      "POST /api/variants/product/:productId",
+      "PUT /api/variants/:id",
+      "PATCH /api/variants/:id/status",
       "GET /api/products/categories",
       "POST /api/products/categories",
       "PUT /api/products/categories/:id",
