@@ -69,6 +69,7 @@ app.get("/api/v1", (_req, res) => {
       "GET /api/products",
       "GET /api/products/:id",
       "GET /api/products/categories",
+      "GET /api/products/categories/public",
       "POST /api/products/categories",
       "PUT /api/products/categories/:id",
       "PATCH /api/products/categories/:id/status",
