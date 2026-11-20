@@ -110,6 +110,7 @@ function renderProducts() {
     const actionCell = node("td", "actions-cell");
     const edit = node("button", "row-action", "Edit"); edit.type = "button"; edit.addEventListener("click", () => openModal(p));
     actionCell.append(edit);
+    const variants = node("button", "row-action", "Variants"); variants.type = "button"; variants.addEventListener("click", () => { location.href = "/variants?productId=" + encodeURIComponent(p.id); }); actionCell.append(variants);
     if (p.is_active) {
       const deactivate = node("button", "row-action danger-text", "Deactivate"); deactivate.type = "button";
       deactivate.addEventListener("click", () => deactivateProduct(p, deactivate)); actionCell.append(deactivate);
