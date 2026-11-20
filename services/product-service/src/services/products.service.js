@@ -121,6 +121,16 @@ export async function deactivateProduct(id) {
   return result.rows[0] || null;
 }
 
+export async function activateProduct(id) {
+  const result = await pool.query(
+    `UPDATE products SET is_active=TRUE, updated_at=NOW()
+     WHERE id=$1 AND is_active=FALSE
+     RETURNING id, name, is_active, updated_at`,
+    [id]
+  );
+  return result.rows[0] || null;
+}
+
 export function parseProductId(value) {
   const id = Number(value);
   return Number.isSafeInteger(id) && id > 0 ? id : null;
