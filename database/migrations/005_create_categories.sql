@@ -19,11 +19,14 @@ CREATE TABLE IF NOT EXISTS categories (
 
 -- Preserve every category already assigned to a product.
 INSERT INTO categories (name, slug)
-SELECT DISTINCT TRIM(category),
-       LOWER(REGEXP_REPLACE(TRIM(category), '[^a-zA-Z0-9]+', '-', 'g'))
-FROM products
-WHERE TRIM(COALESCE(category, '')) <> ''
-ON CONFLICT (name) DO NOTHING;
+SELECT name, LEFT(slug_base, 48) || '-' || ROW_NUMBER() OVER (PARTITION BY slug_base ORDER BY name)::text
+FROM (
+  SELECT DISTINCT TRIM(category) AS name,
+         COALESCE(NULLIF(LOWER(REGEXP_REPLACE(TRIM(category), '[^a-zA-Z0-9]+', '-', 'g')), ''), 'category') AS slug_base
+  FROM products
+  WHERE TRIM(COALESCE(category, '')) <> ''
+) legacy_categories
+ON CONFLICT DO NOTHING;
 
 INSERT INTO categories (name, slug) VALUES
  ('Phones', 'phones'),
