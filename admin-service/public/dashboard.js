@@ -3,6 +3,7 @@ const body = $("#products-body");
 const form = $("#product-form");
 const modal = $("#product-modal");
 let products = [];
+let categoryOptions = [];
 let editingProduct = null;
 let selectedImage = null;
 let previewUrl = null;
@@ -62,6 +63,16 @@ function updateMetrics() {
   $("#low-count").textContent = products.filter(p => p.is_active && stockState(p) === "low").length;
   $("#out-count").textContent = products.filter(p => p.is_active && stockState(p) === "out").length;
   $("#nav-product-count").textContent = products.length;
+}
+async function loadCategoryOptions() {
+  const data = await api("/api/products/categories");
+  categoryOptions = (data.categories || []).filter(category => category.is_active);
+  const select = $("#category");
+  if (!select) return;
+  const current = select.value;
+  select.replaceChildren(new Option("Select a category", ""));
+  categoryOptions.forEach(category => select.add(new Option(category.name, category.name)));
+  if (categoryOptions.some(category => category.name === current)) select.value = current;
 }
 function updateCategoryFilter() {
   const select = $("#category-filter"), current = select.value;
@@ -144,7 +155,10 @@ function openModal(product = null) {
     $("#description").value = product.description || "";
     setPreview(product.image_url || "");
   } else setPreview("");
-  modal.hidden = false; document.body.classList.add("modal-open"); $("#name").focus();
+  modal.hidden = false; document.body.classList.add("modal-open");
+  loadCategoryOptions().then(() => { if (product) $("#category").value = product.category || ""; })
+    .catch(error => { $("#form-message").textContent = error.message; });
+  $("#name").focus();
 }
 function closeModal() {
   modal.hidden = true; document.body.classList.remove("modal-open");
@@ -216,4 +230,4 @@ async function logout() {
 $("#logout").addEventListener("click", logout);
 $("#logout-top").addEventListener("click", logout);
 $("#mobile-menu").addEventListener("click", () => $("#sidebar").classList.toggle("sidebar-open"));
-(async () => { try { await requireOwner(); await loadProducts(); } catch (error) { console.error(error); } })();
+(async () => { try { await requireOwner(); await loadCategoryOptions(); await loadProducts(); } catch (error) { console.error(error); } })();
