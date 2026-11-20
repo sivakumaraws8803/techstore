@@ -9,6 +9,9 @@ const owner = (req, res, next) => {
   next();
 };
 const validId = value => /^\d+$/.test(String(value)) && Number(value) > 0 && Number.isSafeInteger(Number(value));
+async function syncProductSummary(productId) {
+  await pool.query("UPDATE products SET stock=COALESCE((SELECT SUM(stock) FROM product_variants WHERE product_id=$1 AND is_active=TRUE),0), price=COALESCE((SELECT MIN(price) FROM product_variants WHERE product_id=$1 AND is_active=TRUE),price), updated_at=NOW() WHERE id=$1", [productId]);
+}
 const clean = (body = {}) => {
   const sku = String(body.sku || "").trim();
   const name = String(body.name || "").trim();
@@ -56,6 +59,7 @@ router.post("/product/:productId", owner, async (req, res, next) => {
        RETURNING id,product_id,sku,name,attributes,price,stock,image_url,is_active`,
       [req.params.productId,v.sku,v.name,JSON.stringify(v.attributes),v.price,v.stock,v.imageUrl]);
     if (!result.rowCount) return res.status(404).json({ error: "Active product not found." });
+    await syncProductSummary(req.params.productId);
     res.status(201).json({ variant: result.rows[0] });
   } catch (error) { next(error); }
 });
@@ -69,6 +73,7 @@ router.put("/:id", owner, async (req, res, next) => {
        WHERE id=$7 RETURNING id,product_id,sku,name,attributes,price,stock,image_url,is_active`,
       [v.sku,v.name,JSON.stringify(v.attributes),v.price,v.stock,v.imageUrl,req.params.id]);
     if (!result.rowCount) return res.status(404).json({ error: "Variant not found." });
+    await syncProductSummary(result.rows[0].product_id);
     res.json({ variant: result.rows[0] });
   } catch (error) { next(error); }
 });
