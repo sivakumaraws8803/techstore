@@ -5,7 +5,7 @@ import fs from "node:fs";
 import { randomUUID } from "node:crypto";
 import {
   listActiveProducts, listAdminProducts, findActiveProductById,
-  createProduct, updateProduct, deactivateProduct, parseProductId
+  createProduct, updateProduct, deactivateProduct, activateProduct, parseProductId
 } from "../services/products.service.js";
 
 const router = Router();
@@ -84,6 +84,16 @@ router.patch("/:id/deactivate", requireAuth, requireRole("owner"), async (req, r
     const product = await deactivateProduct(id);
     if (!product) return res.status(404).json({ error: "Product not found." });
     res.json({ message: "Product deactivated successfully.", product });
+  } catch (error) { next(error); }
+});
+
+router.patch("/:id/activate", requireAuth, requireRole("owner"), async (req, res, next) => {
+  try {
+    const id = parseProductId(req.params.id);
+    if (!id) return res.status(400).json({ error: "Invalid product ID." });
+    const product = await activateProduct(id);
+    if (!product) return res.status(404).json({ error: "Product not found or already active." });
+    res.json({ message: "Product activated successfully.", product });
   } catch (error) { next(error); }
 });
 
