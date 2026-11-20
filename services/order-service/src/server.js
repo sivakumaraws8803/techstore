@@ -42,33 +42,73 @@ app.get("/health",async(_req,res)=>{try{await pool.query("SELECT 1");res.json({s
 app.get("/api/v1",(_req,res)=>res.json({service:"order-service",endpoints:["POST /api/orders","GET /api/orders/my","GET /api/orders","PATCH /api/orders/:id/status"]}));
 
 async function readOrders(where,params){
- const result=await pool.query(`SELECT o.id,o.customer_id,o.status,o.payment_status,o.total_amount,o.created_at,oi.product_id,oi.product_name,oi.quantity,oi.unit_price
+ const result=await pool.query(`SELECT o.id,o.customer_id,o.status,o.payment_status,o.total_amount,o.created_at,oi.product_id,oi.product_name,oi.quantity,oi.unit_price,oi.variant_id,oi.variant_sku,oi.variant_name,oi.variant_attributes
  FROM orders o LEFT JOIN order_items oi ON oi.order_id=o.id ${where} ORDER BY o.created_at DESC,oi.id`,params);
  const map=new Map();
  for(const row of result.rows){
   if(!map.has(row.id))map.set(row.id,{id:row.id,customer_id:row.customer_id,status:row.status,payment_status:row.payment_status||"pending",total_amount:row.total_amount,created_at:row.created_at,items:[]});
-  if(row.product_id!==null)map.get(row.id).items.push({product_id:row.product_id,product_name:row.product_name,quantity:row.quantity,unit_price:row.unit_price});
+  if(row.product_id!==null)map.get(row.id).items.push({product_id:row.product_id,product_name:row.product_name,quantity:row.quantity,unit_price:row.unit_price,variant_id:row.variant_id,variant_sku:row.variant_sku,variant_name:row.variant_name,variant_attributes:row.variant_attributes||{}});
  }
  return [...map.values()];
 }
 app.post("/api/orders",auth,role("customer"),async(req,res,next)=>{
  const items=req.body?.items;
  if(!Array.isArray(items)||items.length===0||items.length>50)return res.status(400).json({error:"Provide between 1 and 50 order items"});
- const quantities=new Map();
- for(const item of items){const productId=Number(item?.productId),quantity=Number(item?.quantity);if(!Number.isSafeInteger(productId)||productId<1||!Number.isSafeInteger(quantity)||quantity<1||quantity>1000)return res.status(400).json({error:"Invalid product ID or quantity"});quantities.set(productId,(quantities.get(productId)||0)+quantity);}
+ const normalized=[];
+ for(const item of items){
+  const quantity=Number(item?.quantity);
+  const variantId=item?.variantId==null?null:Number(item.variantId);
+  const productId=item?.productId==null?null:Number(item.productId);
+  if(!Number.isSafeInteger(quantity)||quantity<1||quantity>1000)return res.status(400).json({error:"Invalid item quantity"});
+  if(variantId!==null&&(!Number.isSafeInteger(variantId)||variantId<1))return res.status(400).json({error:"Invalid variant ID"});
+  if(variantId===null&&(!Number.isSafeInteger(productId)||productId<1))return res.status(400).json({error:"Invalid product ID"});
+  normalized.push({variantId,productId,quantity});
+ }
  const client=await pool.connect();
  try{
   await client.query("BEGIN");
-  const productIds=[...quantities.keys()].sort((a,b)=>a-b);
-  const products=await client.query("SELECT id,name,price,stock,is_active FROM products WHERE id=ANY($1::bigint[]) ORDER BY id FOR UPDATE",[productIds]);
-  if(products.rows.length!==productIds.length)throw fail(400,"One or more products were not found");
+  const locked=[];
+  for(const item of normalized){
+   let row;
+   if(item.variantId!==null){
+    const result=await client.query(
+     `SELECT v.id AS variant_id,v.product_id,v.sku,v.name AS variant_name,v.attributes,v.price,v.stock,v.image_url,
+             p.name AS product_name,p.is_active
+      FROM product_variants v JOIN products p ON p.id=v.product_id
+      WHERE v.id=$1 AND v.is_active=TRUE FOR UPDATE OF v,p`,[item.variantId]);
+    row=result.rows[0];
+   } else {
+    const result=await client.query(
+     `SELECT NULL::bigint AS variant_id,p.id AS product_id,NULL::text AS sku,NULL::text AS variant_name,
+             '{}'::jsonb AS attributes,p.price,p.stock,p.image_url,p.name AS product_name,p.is_active
+      FROM products p WHERE p.id=$1 FOR UPDATE`,[item.productId]);
+    row=result.rows[0];
+   }
+   if(!row)throw fail(404,"Product or selected variant is unavailable");
+   if(!row.is_active)throw fail(409,row.product_name+" is unavailable");
+   if(Number(row.stock)<item.quantity)throw fail(409,"Insufficient stock for "+row.product_name+(row.variant_name?" ("+row.variant_name+")":""));
+   locked.push({...row,quantity:item.quantity});
+  }
+  const duplicateKeys=new Set();
+  for(const item of locked){const key=item.variant_id!==null?"v:"+item.variant_id:"p:"+item.product_id;if(duplicateKeys.has(key))throw fail(400,"Duplicate cart items must be combined before checkout");duplicateKeys.add(key);}
   let cents=0n;
-  for(const p of products.rows){const qty=quantities.get(Number(p.id));if(!p.is_active)throw fail(409,p.name+" is unavailable");if(Number(p.stock)<qty)throw fail(409,"Insufficient stock for "+p.name);cents+=BigInt(Math.round(Number(p.price)*100))*BigInt(qty);}
+  for(const item of locked)cents+=BigInt(Math.round(Number(item.price)*100))*BigInt(item.quantity);
   const amount=(cents/100n).toString()+"."+(cents%100n).toString().padStart(2,"0");
   const order=(await client.query("INSERT INTO orders(customer_id,status,total_amount) VALUES($1,'pending',$2) RETURNING id,customer_id,status,total_amount,created_at",[req.session.user.id,amount])).rows[0];
-  for(const p of products.rows){const qty=quantities.get(Number(p.id));await client.query("INSERT INTO order_items(order_id,product_id,product_name,quantity,unit_price) VALUES($1,$2,$3,$4,$5)",[order.id,p.id,p.name,qty,p.price]);await client.query("UPDATE products SET stock=stock-$1,updated_at=NOW() WHERE id=$2",[qty,p.id]);}
+  for(const item of locked){
+   await client.query(
+    `INSERT INTO order_items(order_id,product_id,product_name,quantity,unit_price,variant_id,variant_sku,variant_name,variant_attributes)
+     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)`,
+    [order.id,item.product_id,item.product_name,item.quantity,item.price,item.variant_id,item.sku,item.variant_name,JSON.stringify(item.attributes||{})]);
+   if(item.variant_id!==null){
+    await client.query("UPDATE product_variants SET stock=stock-$1,updated_at=NOW() WHERE id=$2",[item.quantity,item.variant_id]);
+    await client.query("UPDATE products SET stock=(SELECT COALESCE(SUM(stock),0) FROM product_variants WHERE product_id=$1 AND is_active=TRUE),updated_at=NOW() WHERE id=$1",[item.product_id]);
+   } else {
+    await client.query("UPDATE products SET stock=stock-$1,updated_at=NOW() WHERE id=$2",[item.quantity,item.product_id]);
+   }
+  }
   await client.query("COMMIT");
-  res.status(201).json({message:"Order created successfully",order:{...order,items:products.rows.map(p=>({product_id:p.id,product_name:p.name,quantity:quantities.get(Number(p.id)),unit_price:p.price}))}});
+  res.status(201).json({message:"Order created successfully",order:{...order,items:locked.map(item=>({product_id:item.product_id,product_name:item.product_name,quantity:item.quantity,unit_price:item.price,variant_id:item.variant_id,variant_sku:item.sku,variant_name:item.variant_name,variant_attributes:item.attributes||{}}))}});
  }catch(error){await client.query("ROLLBACK");next(error);}finally{client.release();}
 });
 app.get("/api/orders/my",auth,role("customer"),async(req,res,next)=>{try{res.json({orders:await readOrders("WHERE o.customer_id=$1",[req.session.user.id])});}catch(e){next(e);}});
