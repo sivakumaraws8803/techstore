@@ -57,6 +57,11 @@ function validateProduct(data) {
   };
 }
 
+async function assertActiveCategory(category) {
+  const result = await pool.query("SELECT id FROM categories WHERE LOWER(name)=LOWER($1) AND is_active=TRUE", [category]);
+  if (!result.rowCount) throw httpError(400, "Select an active category from the category list.");
+}
+
 const productColumns = `id, name, description, category, price, image_url,
   is_active, created_by, created_at, updated_at, stock, brand, discount_percent`;
 
@@ -86,6 +91,7 @@ export async function findActiveProductById(id) {
 
 export async function createProduct(data, userId) {
   const product = validateProduct(data);
+  await assertActiveCategory(product.category);
   const result = await pool.query(
     `INSERT INTO products
       (name, description, category, price, image_url, stock, brand, discount_percent, created_by)
@@ -99,6 +105,7 @@ export async function createProduct(data, userId) {
 
 export async function updateProduct(id, data) {
   const product = validateProduct(data);
+  await assertActiveCategory(product.category);
   const result = await pool.query(
     `UPDATE products SET
        name=$1, description=$2, category=$3, price=$4, image_url=$5,
