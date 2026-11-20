@@ -14,6 +14,8 @@ Separate owner-facing admin application for `admin.cloudlearning.online`.
 - Create and edit products using a real multipart image upload (JPG, PNG, WEBP, AVIF; 5 MB maximum).
 - Inventory quantity updates, low-stock and out-of-stock indicators.
 - Product activation/deactivation using the existing Product Service.
+- Dedicated Categories page to create, rename, activate and deactivate categories.
+- Product form category dropdown populated from active categories; renaming a category updates its existing product assignments.
 - Existing owner authentication and PostgreSQL-backed session are retained.
 
 ## Image storage
