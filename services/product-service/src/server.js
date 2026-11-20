@@ -60,7 +60,7 @@ app.get("/health", async (_req, res) => {
 });
 
 app.use("/api/products/categories", categoriesRoutes);
-app.use("/api/variants", variantsRoutes);
+app.use("/api/products/variants", variantsRoutes);
 app.use("/api/products", productsRoutes);
 
 app.get("/api/v1", (_req, res) => {
@@ -70,11 +70,11 @@ app.get("/api/v1", (_req, res) => {
     endpoints: [
       "GET /api/products",
       "GET /api/products/:id",
-      "GET /api/variants/product/:productId",
-      "GET /api/variants/admin/product/:productId",
-      "POST /api/variants/product/:productId",
-      "PUT /api/variants/:id",
-      "PATCH /api/variants/:id/status",
+      "GET /api/products/variants/product/:productId",
+      "GET /api/products/variants/admin/product/:productId",
+      "POST /api/products/variants/product/:productId",
+      "PUT /api/products/variants/:id",
+      "PATCH /api/products/variants/:id/status",
       "GET /api/products/categories",
       "POST /api/products/categories",
       "PUT /api/products/categories/:id",
